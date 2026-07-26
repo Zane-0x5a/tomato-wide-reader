@@ -26,9 +26,11 @@ Edge / Chromium Manifest V3 扩展。
 - **连续跨章** —— 章节之间直接翻过去，没有确认页；只预取相邻的一章。
 - **安静的界面** —— 闲置时屏幕上几乎只有正文和一个页码。控制层靠近边缘才出现。App 下载二维码、推广、打赏入口一律不呈现。
 
-| 目录抽屉 | 排版与主题 | 窄窗口回退 |
-|---|---|---|
-| ![目录](docs/screenshots/directory.png) | ![设置](docs/screenshots/settings.png) | ![窄屏](docs/screenshots/narrow-fallback.png) |
+| 目录抽屉 | 排版与主题 |
+|---|---|
+| ![目录](docs/screenshots/directory.png) | ![设置](docs/screenshots/settings.png) |
+| **深色主题** | **窄窗口回退单栏** |
+| ![深色](docs/screenshots/reader-dark.png) | ![窄屏](docs/screenshots/narrow-fallback.png) |
 
 可搜索的全高目录会标出当前章节；排版设置提供快捷预设与可展开的细调；深浅色主题都按护眼取值，没有纯黑纯白的刺眼对比。
 
