@@ -17,17 +17,9 @@ node_modules/
 # Scratch / intermediate
 tmp/
 
-# Browser evidence + generated concepts. These are real captures of the reader
-# showing verbatim text from a commercial novel, so they are kept local rather
-# than republished. Store/README screenshots should use public-domain text.
+# Browser evidence + generated concepts (~11MB of dev artefacts). Curated
+# screenshots for the README live in docs/screenshots/ and are tracked.
 output/
-
-# PENDING DECISION — see README "构建" section.
-# generated/fanqie-glyph-map.json is a build dependency (statically imported by
-# src/content/normalize.ts) but is also the PUA->Unicode mapping table itself.
-# Excluded for now so nothing is published before that call is made.
-# To ship a repo that builds on clone, delete this block and commit the file.
-generated/
 
 # OS / editor
 Thumbs.db
