@@ -2,10 +2,12 @@
 // The machine has no ImageMagick / Inkscape / sharp, so the PNG bytes are
 // encoded here directly (zlib is in Node's stdlib).
 //
-// Design intent: the product's own reading surface, not a borrowed identity.
-// A cream page tile holding two text columns — literally the thing the
-// extension does — in the palette from DESIGN_SYSTEM.md. Deliberately shares
-// nothing with Fanqie's logo or brand marks.
+// Design: a page caught mid page-turn — its leading edge lifted and leaning
+// right, revealing the next page beneath. That is literally what the extension
+// does (pagination replacing scroll), and a bright page silhouette on a dark
+// tile is the one composition that survives a 16px toolbar, where fine text
+// lines collapse into mush. Colours are the product's own tokens from
+// DESIGN_SYSTEM.md; nothing here echoes Fanqie's marks.
 //
 //   node tools/make-icons.mjs
 
@@ -22,11 +24,10 @@ const STORE_DIR = join(ROOT, 'store-assets');
 const SIZES = [16, 32, 48, 128, 300];
 
 // DESIGN_SYSTEM.md tokens
-const CREAM = [0xf6, 0xf3, 0xed];
-const INK = [0x29, 0x28, 0x24];
-const INK_SOFT = [0x5a, 0x58, 0x52];
-const MUTED = [0x71, 0x6e, 0x67];
-const ACCENT = [0xa9, 0x4b, 0x3b];
+const FIELD = [0x1d, 0x1d, 0x1b]; // dark reading background
+const PAGE = [0xf6, 0xf3, 0xed]; // cream paper
+const UNDER = [0x85, 0x82, 0x7b]; // the page beneath, in shade
+const ACCENT = [0xa9, 0x4b, 0x3b]; // terracotta; only ever a thin edge
 
 // ---------- minimal PNG encoder ----------
 
@@ -79,66 +80,113 @@ function encodePng(width, height, rgba) {
 
 const SS = 4; // supersample factor, box-downsampled for antialiasing
 
+// Geometry in 0..1 of the tile, so every size is the same picture.
+const BLOCK_T = 0.225; // page block top
+const BLOCK_B = 0.775; // page block bottom
+const LEFT_X = 0.135; // left edge of the resting page
+const SPINE_A = 0.478; // resting page ends
+const SPINE_B = 0.496; // turning page starts (dark gap between = the spine)
+const FOLD_X = 0.678; // lifted leading edge
+const FOLD_RISE = 0.078; // how far that edge lifts above the block
+const UNDER_R = 0.865; // right edge of the page beneath
+
 function drawIcon(size) {
   const S = size * SS;
-  const buf = Buffer.alloc(S * S * 4, 0); // fully transparent
+  const buf = Buffer.alloc(S * S * 4, 0); // transparent
+  const P = (v) => v * S; // normalized → supersampled px
+
+  // Below 32px the fine geometry is sub-pixel: the spine gap lands at ~0.3px
+  // and the lifted edge's diagonal only contributes antialiasing haze, so the
+  // whole thing turns to mush. Hint it like a font — snap every edge to a whole
+  // device pixel, force the spine to exactly 1px, and drop the lift, keeping a
+  // crisp page | spine | page | shade silhouette instead of a blurry one.
+  const hinted = size < 32;
+  const q = (v) => (hinted ? Math.round(v * size) / size : v);
+  const blockT = q(BLOCK_T);
+  const blockB = q(BLOCK_B);
+  const leftX = q(LEFT_X);
+  const foldX = q(FOLD_X);
+  const underR = q(UNDER_R);
+  const spineA = hinted ? q(SPINE_A) - 1 / size : SPINE_A;
+  const spineB = hinted ? q(SPINE_A) : SPINE_B;
+  const rise = hinted ? 0 : FOLD_RISE;
 
   const set = (x, y, c, a = 255) => {
     if (x < 0 || y < 0 || x >= S || y >= S) return;
     const i = (y * S + x) * 4;
     buf[i] = c[0]; buf[i + 1] = c[1]; buf[i + 2] = c[2]; buf[i + 3] = a;
   };
+
   const rect = (x, y, w, h, c, a = 255) => {
-    const x0 = Math.round(x), y0 = Math.round(y);
-    for (let yy = y0; yy < Math.round(y + h); yy++)
-      for (let xx = x0; xx < Math.round(x + w); xx++) set(xx, yy, c, a);
+    for (let yy = Math.round(y); yy < Math.round(y + h); yy++)
+      for (let xx = Math.round(x); xx < Math.round(x + w); xx++) set(xx, yy, c, a);
   };
 
-  // page tile with rounded corners
+  // Scanline fill; pts are [x, y] pairs in supersampled space.
+  const poly = (pts, c, a = 255) => {
+    const ys = pts.map((p) => p[1]);
+    const y0 = Math.max(0, Math.floor(Math.min(...ys)));
+    const y1 = Math.min(S - 1, Math.ceil(Math.max(...ys)));
+    for (let y = y0; y <= y1; y++) {
+      const yc = y + 0.5;
+      const xs = [];
+      for (let i = 0; i < pts.length; i++) {
+        const [xa, ya] = pts[i];
+        const [xb, yb] = pts[(i + 1) % pts.length];
+        if ((ya <= yc && yb > yc) || (yb <= yc && ya > yc)) {
+          xs.push(xa + ((yc - ya) / (yb - ya)) * (xb - xa));
+        }
+      }
+      xs.sort((p, q) => p - q);
+      for (let k = 0; k + 1 < xs.length; k += 2) {
+        for (let x = Math.round(xs[k]); x < Math.round(xs[k + 1]); x++) set(x, y, c, a);
+      }
+    }
+  };
+
+  // 1. the dark reading field, as a rounded square
   const r = S * 0.2;
   for (let y = 0; y < S; y++) {
     for (let x = 0; x < S; x++) {
       const dx = Math.max(r - x, x - (S - 1 - r), 0);
       const dy = Math.max(r - y, y - (S - 1 - r), 0);
-      if (Math.hypot(dx, dy) <= r) set(x, y, CREAM);
+      if (Math.hypot(dx, dy) <= r) set(x, y, FIELD);
     }
   }
 
-  const margin = S * 0.185;
-  const gutter = S * 0.1;
-  const colW = (S - 2 * margin - gutter) / 2;
-  const top = S * 0.225;
-  const colH = S * 0.55;
-  const rightX = margin + colW + gutter;
+  // 2. the page beneath, in shade — the thing being revealed
+  const underInset = hinted ? 0 : 0.007;
+  rect(P(foldX), P(blockT + underInset), P(underR - foldX), P(blockB - blockT - underInset), UNDER);
 
-  const detailed = size >= 48;
+  // 3. the resting page
+  rect(P(leftX), P(blockT), P(spineA - leftX), P(blockB - blockT), PAGE);
 
-  if (detailed) {
-    // text lines: the two-column spread, readable as type at large sizes
-    const lineH = S * 0.05;
-    const period = S * 0.098;
-    for (const x of [margin, rightX]) {
-      for (let i = 0; ; i++) {
-        const y = top + i * period;
-        if (y + lineH > top + colH) break;
-        // last line of each column runs short, like real ragged text
-        const isLast = y + period + lineH > top + colH;
-        rect(x, y, isLast ? colW * 0.62 : colW, lineH, INK);
-      }
-    }
-    // faint centre rule — DESIGN_SYSTEM: divider at very low opacity
-    rect(margin + colW + gutter / 2 - S * 0.006, top, S * 0.012, colH, MUTED, 46);
-  } else {
-    // at 16-32px individual lines turn to mush; show the two-column mass instead
-    rect(margin, top, colW, colH, INK_SOFT);
-    rect(rightX, top, colW, colH, INK_SOFT);
+  // 4. the turning page: hinged at the spine, its leading edge lifted
+  poly(
+    [
+      [P(spineB), P(blockT)],
+      [P(foldX), P(blockT - rise)],
+      [P(foldX), P(blockB - rise)],
+      [P(spineB), P(blockB)],
+    ],
+    PAGE,
+  );
+
+  // 5. the accent, only ever a thin edge on the leading fold. At 16px it would
+  // be sub-pixel and would just muddy the silhouette, so it is dropped there
+  // rather than smeared.
+  if (size >= 32) {
+    const w = Math.max(SS, P(0.014));
+    poly(
+      [
+        [P(foldX) - w, P(blockT - rise)],
+        [P(foldX), P(blockT - rise)],
+        [P(foldX), P(blockB - rise)],
+        [P(foldX) - w, P(blockB - rise)],
+      ],
+      ACCENT,
+    );
   }
-
-  // progress marker — the one place DESIGN_SYSTEM allows the accent
-  const barH = Math.max(SS, S * 0.038);
-  const barY = top + colH + S * 0.085;
-  rect(margin, barY, colW * 0.72, barH, ACCENT);
-  rect(margin + colW * 0.72, barY, (S - 2 * margin) - colW * 0.72, barH, MUTED, 60);
 
   // ---------- downsample (premultiplied, so edges don't halo) ----------
   const out = Buffer.alloc(size * size * 4);
