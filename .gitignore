@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# WXT build output
+.output/
+.wxt/
+
+# Playwright browser profile — NEVER COMMIT.
+# Contains Login Data, Login Data For Account, History, Extension Cookies,
+# Secure Preferences (~198MB of real browser profile data).
+.playwright/
+
+# Playwright CLI run artifacts — console logs + page snapshots captured while
+# driving a real logged-in session. Local debugging evidence, not source.
+.playwright-cli/
+
+# Scratch / intermediate
+tmp/
+
+# Browser evidence + generated concepts. These are real captures of the reader
+# showing verbatim text from a commercial novel, so they are kept local rather
+# than republished. Store/README screenshots should use public-domain text.
+output/
+
+# PENDING DECISION — see README "构建" section.
+# generated/fanqie-glyph-map.json is a build dependency (statically imported by
+# src/content/normalize.ts) but is also the PUA->Unicode mapping table itself.
+# Excluded for now so nothing is published before that call is made.
+# To ship a repo that builds on clone, delete this block and commit the file.
+generated/
+
+# OS / editor
+Thumbs.db
+.DS_Store
+*.swp

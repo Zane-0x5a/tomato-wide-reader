@@ -1,0 +1,30 @@
+{
+  "name": "tomato-wide-reader",
+  "version": "0.1.17",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "prepare": "wxt prepare",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run typecheck && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@wxt-dev/module-react": "^1.1.5",
+    "lucide-react": "^1.25.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "wxt": "^0.20.27"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.10"
+  }
+}
