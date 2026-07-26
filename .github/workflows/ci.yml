@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Icons are committed under public/, but regenerating proves the
+      # generator still matches what ships.
+      - run: node tools/make-icons.mjs
+
+      - run: git diff --exit-code -- public/
+        name: Verify committed icons match the generator
+
+      # typecheck + vitest + MV3 build
+      - run: npm run check
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chrome-mv3
+          path: .output/chrome-mv3

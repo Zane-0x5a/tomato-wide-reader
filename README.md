@@ -1,5 +1,9 @@
 # 番茄小说宽屏阅读
 
+[![CI](https://github.com/Zane-0x5a/tomato-wide-reader/actions/workflows/ci.yml/badge.svg)](https://github.com/Zane-0x5a/tomato-wide-reader/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Zane-0x5a/tomato-wide-reader)](https://github.com/Zane-0x5a/tomato-wide-reader/releases/latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-a94b3b)](LICENSE)
+
 把番茄小说的网页阅读器变成**整屏固定视口的双栏翻页阅读器**。不再滚动，不再窄栏，长时间读也不累。
 
 Edge / Chromium Manifest V3 扩展。
