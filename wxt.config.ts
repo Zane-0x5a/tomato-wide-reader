@@ -4,7 +4,7 @@ export default defineConfig({
   manifest: {
     name: '番茄小说宽屏阅读',
     description: '非官方扩展。将番茄小说网页阅读器转换为沉浸式单栏或双栏翻页阅读。',
-    version: '0.1.17',
+    version: '0.1.18',
     permissions: ['storage'],
     host_permissions: ['https://fanqienovel.com/reader/*'],
     icons: {
